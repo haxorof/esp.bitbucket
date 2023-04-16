@@ -55,7 +55,7 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   branch_name:
     description:
     - A specific branch name you want to restrict access to.
@@ -88,16 +88,16 @@ options:
         - Restriction name.
         type: str
         choices: [ 'deletion', 'rewriting history', 'changes without a pull request', 'all changes' ]
-        required: true    
+        required: true
       exemptions:
         description:
         - Exemptions from the supplied restriction.
-        type: dict             
+        type: dict
         suboptions:
           groups:
             description:
             - Groups excluded from the restriction.
-            type: list         
+            type: list
           users:
             description:
             - Users excluded from the restriction.
@@ -105,7 +105,7 @@ options:
           access_keys:
             description:
             - Access keys excluded from the restriction.
-            type: list   
+            type: list
   state:
     description:
     - Whether the restriction should exist or not.
@@ -129,7 +129,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -165,7 +165,7 @@ EXAMPLES = r'''
         exemptions:
           groups: [ group3 ]
           users: [ joe ]
-          access_keys: []                    
+          access_keys: []
     state: present
     validate_certs: no
 
@@ -207,15 +207,15 @@ EXAMPLES = r'''
     url: 'https://bitbucket.example.com'
     username: jsmith
     password: secrect
-    project_key: FOO    
-    repository: bar  
+    project_key: FOO
+    repository: bar
     branch_name: master
     restrictions:
       - prevent: 'deletion'
         exemptions:
           groups: []
           users: [ john ]
-          access_keys: []        
+          access_keys: []
       - prevent: 'rewriting history'
     state: absent
     validate_certs: no
@@ -231,7 +231,7 @@ repository:
     description: Bitbucket repository name.
     returned: always
     type: str
-    sample: bar      
+    sample: bar
 branch_name:
     description: A specific branch name.
     returned: success
@@ -263,19 +263,19 @@ results:
                 id: RELEASE
                 type:
                     id: MODEL_CATEGORY
-                    name: Branching model category                    
+                    name: Branching model category
         scope:
             description: Scope.
             returned: success
             type: dict
             sample:
                 resourceId: 292
-                type: PROJECT  
-        id:                    
+                type: PROJECT
+        id:
             description: Permission ID.
             returned: success
             type: int
-            sample: 42                  
+            sample: 42
         groups:
             description: Bitbucket groups.
             returned: success
@@ -375,8 +375,8 @@ def delete_branch_permission(module, bitbucket, project_key=None, repository=Non
         method='DELETE',
     )
 
-    if info['status'] == 204:        
-        return content        
+    if info['status'] == 204:
+        return content
 
     if info['status'] != 204:
         module.fail_json(msg='Failed to delete branch permissions in the supplied project and/or repository: {info}'.format(
@@ -389,7 +389,7 @@ def delete_branch_permission(module, bitbucket, project_key=None, repository=Non
 def get_restriction_type(prevent=None):
     """
     Returns restiction type based on the supplied prevent name
-    """  
+    """
 
     return {
         'deletion': 'no-deletes',
@@ -428,29 +428,27 @@ def get_matcher(matcher_type=None, matcher_name=None):
         )
 
     if matcher_type == 'branching_model':
-        if (matcher_name == 'development' or 'production'):
+        if (matcher_name == 'development' or matcher_name == 'production'):
             matcher = dict(
                 active=True,
                 displayId=matcher_name.capitalize(),
                 id=matcher_name,
                 type=dict(
-                    id="MODEL_BRANCH",
-                    name="Branching model branch"
+                    id="MODEL_BRANCH"
                 ),
             )
         else:
             matcher = dict(
                 active=True,
-                displayId=matcher_name.capitalize(),
+                displayId=matcher_name.upper(),
                 id=matcher_name.upper(),
                 type=dict(
-                    id="MODEL_CATEGORY",
-                    name="Branching model category"
+                    id="MODEL_CATEGORY"
                 ),
             )
 
     return matcher
-    
+
 
 def main():
     argument_spec = BitbucketHelper.bitbucket_argument_spec()
@@ -462,13 +460,13 @@ def main():
         branch_pattern=dict(type='str', required=False, no_log=False),
         branching_model=dict(type='str', choices=['feature', 'bugfix', 'hotfix', 'release', 'development', 'production'], required=False, no_log=False),
         restrictions=dict(
-            type='list', 
+            type='list',
             elements='dict', required=True, no_log=False,
             options=dict(
                 prevent=dict(type='str', choices=['deletion', 'rewriting history', 'changes without a pull request', 'all changes'], required=True, no_log=False),
                 exemptions=dict(
                     type='dict',
-                    required=False, 
+                    required=False,
                     no_log=False,
                     default=dict(groups=list(), users=list(), access_keys=list()),
                     options=dict(
@@ -482,7 +480,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token'), ('branch_name', 'branch_pattern', 'branching_model')],
         mutually_exclusive=[('username', 'token'), ('branch_name', 'branch_pattern', 'branching_model')],
@@ -492,7 +490,7 @@ def main():
     bitbucket = BitbucketHelper(module)
 
     state = module.params['state']
-    project_key = module.params['project_key'] 
+    project_key = module.params['project_key']
     repository = module.params['repository']
     return_content = module.params['return_content']
     branch_name = module.params['branch_name']
@@ -542,18 +540,18 @@ def main():
     existing_branch_permissions = bitbucket.get_branch_permissions_info(fail_when_not_exists=False, project_key=project_key, repository=repository)
 
     # Iterate over the supplied restictions
-    for restriction in restrictions:        
+    for restriction in restrictions:
         if restriction['exemptions'] is None:
             restriction['exemptions'] = dict(groups=list(), users=list(), access_keys=list())
 
         exemptions_groups = restriction['exemptions']['groups']
         exemptions_users = restriction['exemptions']['users']
-        exemptions_access_keys = restriction['exemptions']['access_keys']        
-        restriction_type = get_restriction_type(prevent=restriction['prevent'])        
+        exemptions_access_keys = restriction['exemptions']['access_keys']
+        restriction_type = get_restriction_type(prevent=restriction['prevent'])
 
         # Search for matching restrictions in existing branch permissions list
         found = [p for p in existing_branch_permissions if
-                       p.get('matcher', {}) == matcher 
+                       p.get('matcher', {}) == matcher
                    and p.get('type', 'no_type') == restriction_type
                    and [g.lower() for g in p.get('groups', [])] == [g.lower() for g in exemptions_groups]
                    and [u['name'] for u in p.get('users', [])] == [u.upper() for u in exemptions_users]
@@ -566,9 +564,9 @@ def main():
             if state == 'present':
                 if not module.check_mode:
                     result['results'].append(create_branch_permission(module, bitbucket, project_key=project_key, repository=repository, restriction_type=restriction_type,
-                                                                      matcher=matcher, users=exemptions_users, groups=exemptions_groups, accessKeys=exemptions_access_keys))                         
+                                                                      matcher=matcher, users=exemptions_users, groups=exemptions_groups, accessKeys=exemptions_access_keys))
                 result['changed'] = True
-        
+
         else:
             # Delete the restriction if it exists and state == 'absent'
             if state == 'absent':

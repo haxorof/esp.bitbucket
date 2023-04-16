@@ -44,6 +44,7 @@ class BitbucketHelper:
         'branch-permissions-projects': '{url}/rest/branch-permissions/2.0/projects/{projectKey}/restrictions',
         'branch-permissions-repos': '{url}/rest/branch-permissions/2.0/projects/{projectKey}/repos/{repositorySlug}/restrictions',
         'webhooks': '{url}/rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/webhooks',
+        'webhooks-deleteupdate': '{url}/rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/webhooks/{id}',
         'pulls': '{url}/rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests',
         'pulls-delete': '{url}/rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullid}',
         'branch-default': '{url}/rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/branches/default',
@@ -55,6 +56,8 @@ class BitbucketHelper:
         'reviewers-repo-delete': '{url}/rest/default-reviewers/1.0/projects/{projectKey}/repos/{repositorySlug}/condition/{id}',
         'reviewers-get-repo': '{url}/rest/default-reviewers/1.0/projects/{projectKey}/repos/{repositorySlug}/conditions',
         'user': '{url}/rest/api/1.0/users/{userId}',
+        'hook': '{url}/rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/settings/hooks/{hookId}',
+        'hook-project': '{url}/rest/api/1.0/projects/{projectKey}/settings/hooks/{hookId}'
     }
 
     def __init__(self, module):
@@ -121,7 +124,7 @@ class BitbucketHelper:
             retries += 1
 
         content = {}
-   
+
         if response is not None:
 
             body = to_text(response.read())
@@ -556,7 +559,7 @@ class BitbucketHelper:
                         repositorySlug=repository,
                         nextPageStart=nextPageStart,
             )
-        
+
         while not isLastPage:
             info, content = self.request(
                 api_url=url,
@@ -981,7 +984,7 @@ esac
         """
         Update the default branch of a repository.
 
-        """        
+        """
         info, content = self.request(
             api_url=self.BITBUCKET_API_ENDPOINTS['branch-default'].format(
                 url=self.module.params['url'],

@@ -49,7 +49,7 @@ options:
     description:
     - Retrieve application links matching the supplied I(applink) filter.
     - This can be '*' which means all application links.
-    - One may refer to an application link either by its ID or its name.    
+    - One may refer to an application link either by its ID or its name.
     type: list
     required: false
     default: [ '*' ]
@@ -63,7 +63,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -129,7 +129,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]
@@ -156,10 +156,10 @@ def main():
 
     # Retrieve detalis on all Application Links
     all_applinks = bitbucket.get_application_links_info()
-    
+
     if '*' in applinks:
         result['applicaton_links'].extend( all_applinks['json'] )
-    else:    
+    else:
         for applink in applinks:
             found = [al for al in all_applinks['json'] if al['id'] == applink or al['name'] == applink]
             if len(found) == 1:

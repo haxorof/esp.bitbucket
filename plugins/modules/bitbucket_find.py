@@ -13,7 +13,7 @@ DOCUMENTATION = r'''
 module: bitbucket_find
 short_description: Retrieve a list of files from particular repository of a Bitbucket Server based on specific criteria
 description:
-- Retrieve a list of matching file names from particular repository of a Bitbucket Server. 
+- Retrieve a list of matching file names from particular repository of a Bitbucket Server.
 - Files are selected based on C(patterns) option. Additionaly, files can be further filtered out by C(grep) option to select only those matching the supplied grep pattern.
 - Combined outcome of C(patterns) and C(grep) options form the final list of files returned by this module.
 - The search is done using Python regex patterns.
@@ -59,7 +59,7 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   at:
     description:
     - The commit ID or ref (e.g. a branch or tag) to read a file at.
@@ -86,8 +86,8 @@ options:
     - Combined outcome of C(patterns) and C(grep) options form the final list of files returned by this module.
     - If not specified, search will not be executed.
     type: str
-    aliases: [ search ]    
-    required: false  
+    aliases: [ search ]
+    required: false
   validate_certs:
     description:
       - If C(no), SSL certificates will not be validated.
@@ -98,7 +98,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -147,7 +147,7 @@ EXAMPLES = r'''
     project_key: FOO
     patterns: baz
     at: develop
-    grep: 'hello.+?world'    
+    grep: 'hello.+?world'
     validate_certs: no
 '''
 
@@ -167,10 +167,10 @@ messages:
     returned: always
     type: list
     sample:
-      - Repository `bar2` does not exist. 
+      - Repository `bar2` does not exist.
 at:
     description: The commit ID or ref (e.g. a branch or tag) to read a file at.
-    returned: always  
+    returned: always
     type: str
     sample: master
 patterns:
@@ -182,9 +182,9 @@ patterns:
       - ".+\\.json$"
 grep:
     description: Python regex pattern to search for in each file selected from repository to form the final list of files.
-    returned: always  
+    returned: always
     type: str
-    sample: hello      
+    sample: hello
 files:
     description: List of matching file names from particular repository.
     returned: success
@@ -253,14 +253,14 @@ def get_list_of_files(module, bitbucket, project_key=None, repository=None):
         info, content = bitbucket.request(
             api_url=(bitbucket.BITBUCKET_API_ENDPOINTS['repos-files'] + '?limit=1000&start={nextPageStart}{path}{at}').format(
                 url=module.params['url'],
-                projectKey=project_key,                
+                projectKey=project_key,
                 repositorySlug=repository,
                 nextPageStart=nextPageStart,
                 at=at,
                 path='',
             ),
             method='GET',
-        )              
+        )
 
         if info['status'] == 200:
             filelist.extend(content['values'])
@@ -290,14 +290,14 @@ def main():
     argument_spec = BitbucketHelper.bitbucket_argument_spec()
     argument_spec.update(
         repository=dict(type='str', required=True, no_log=False, aliases=['name']),
-        project_key=dict(type='str', required=True, no_log=False, aliases=['project']),                
+        project_key=dict(type='str', required=True, no_log=False, aliases=['project']),
         at=dict(type='str', required=False, no_log=False),
         patterns=dict(type='list', default=[], aliases=['pattern'], elements='str'),
         grep=dict(type='str', required=False, no_log=False, aliases=['search']),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]
@@ -305,13 +305,13 @@ def main():
 
     bitbucket = BitbucketHelper(module)
 
-    project_key = module.params['project_key'] 
+    project_key = module.params['project_key']
     repository = module.params['repository']
     return_content = module.params['return_content']
     at = module.params['at']
     grep = module.params['grep']
 
-    module.params['return_content'] = True    
+    module.params['return_content'] = True
 
     # Parse `patterns` parameter and create list of patterns.
     # It's possible someone passed a comma separated string, so we should handle that.
@@ -325,7 +325,7 @@ def main():
     # Seed the result dict in the object
     result = dict(
         changed=False,
-        project_key=project_key,        
+        project_key=project_key,
         repository=repository,
         at=at,
         patterns=patterns,

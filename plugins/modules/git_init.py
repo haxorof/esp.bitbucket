@@ -13,25 +13,25 @@ DOCUMENTATION = r'''
 ---
 module: git_init
 short_description: Initialize local empty repository
-description: 
+description:
 - Initializes local empty repository.
 author:
-  - Pawel Smolarz (pawel.smolarz@nordea.com) 
+  - Pawel Smolarz (pawel.smolarz@nordea.com)
   - Krzysztof Lewandowski (@klewan)
 version_added: 1.3.0
 options:
   repodir:
     description:
     - Repository directory.
-    type: str  
-    aliases: [ path ] 
-    required: true  
+    type: str
+    aliases: [ path ]
+    required: true
   force:
     description:
     - Force initalization, i.e. delete the repo directory if it already exists, then initialize.
     type: bool
-    default: no  
-    required: false      
+    default: no
+    required: false
 notes:
 - requirements [ os, pathlib, gitpython ]
 - Supports C(check_mode).
@@ -39,15 +39,15 @@ notes:
 
 EXAMPLES = r'''
 - name: Initialize git repository
-  esp.bitbucket.git_init:  
-    path: /tmp/bar 
-    force: no   
+  esp.bitbucket.git_init:
+    path: /tmp/bar
+    force: no
   register: _result
 
 - name: Initialize git repository, but first delete the directory if it exists
-  esp.bitbucket.git_init:  
-    path: /tmp/bar 
-    force: yes   
+  esp.bitbucket.git_init:
+    path: /tmp/bar
+    force: yes
   register: _result
 '''
 
@@ -73,11 +73,11 @@ def main():
             repodir=dict(type='str', required=True, no_log=False, aliases=['path']),
             force=dict(type='bool', no_log=False, default=False),
         ),
-        supports_check_mode=True, 
+        supports_check_mode=True,
     )
 
-    repodir = module.params['repodir']  
-    force = module.params['force']  
+    repodir = module.params['repodir']
+    force = module.params['force']
 
     # Seed the result dict in the object
     result = dict(
@@ -95,7 +95,7 @@ def main():
             result['changed'] = True
             if not module.check_mode:
                 try:
-                    shutil.rmtree(repodir, ignore_errors=True)          
+                    shutil.rmtree(repodir, ignore_errors=True)
                 except Exception as e:
                     module.fail_json(msg='Error while deleting %s directory. Details: %s' % (repodir, to_native(e)))
         else:
@@ -104,11 +104,11 @@ def main():
     # Check if repodir exists
     #
     if not os.path.exists(repodir):
-        
+
         if not module.check_mode:
 
-            try:  
-                Repo.init(repodir)   
+            try:
+                Repo.init(repodir)
             except Exception as e:
                 module.fail_json(msg='Failed to initialize git repository in %s path. Details: %s' % (repodir, to_native(e)))
 
@@ -119,4 +119,3 @@ def main():
 
 if __name__ == '__main__':
     main()
- 

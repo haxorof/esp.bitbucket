@@ -63,7 +63,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -87,7 +87,7 @@ options:
     required: true
   approvals:
     description:
-    - Number of approvals required 
+    - Number of approvals required
     type: str
     default: 0
     required: false
@@ -114,7 +114,7 @@ messages:
     returned: always
     type: list
     sample:
-      - Repository `bar2` does not exist. 
+      - Repository `bar2` does not exist.
 projects:
     description: List of Bitbucket projects.
     returned: always
@@ -149,7 +149,7 @@ projects:
             description: Project ID.
             returned: success
             type: int
-            sample: 200 
+            sample: 200
         links:
             description: Links to Bitbucket project.
             returned: success
@@ -161,7 +161,7 @@ projects:
                     type: list
                     elements: dict
                     sample:
-                        - href: https://bitbucket.example.com/projects/FOO  
+                        - href: https://bitbucket.example.com/projects/FOO
 '''
 
 from ansible.module_utils.basic import AnsibleModule

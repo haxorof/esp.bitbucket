@@ -54,7 +54,7 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   return_content:
     description:
       - Whether or not to return the body of the response as a "content" key in
@@ -71,7 +71,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -114,7 +114,7 @@ repository:
     description: Bitbucket repository name.
     returned: success
     type: str
-    sample: bar 
+    sample: bar
 json:
     description: List of pull requests for the supplied project and repository.
     returned: success
@@ -125,12 +125,12 @@ json:
             description: Pull request author.
             returned: success
             type: str
-            sample: john   
+            sample: john
         title:
             description: Pull request title.
             returned: success
             type: str
-            sample: baz.yml edited online with Bitbucket                
+            sample: baz.yml edited online with Bitbucket
         fromRef:
             description: From branch name.
             returned: success
@@ -140,12 +140,12 @@ json:
             description: To branch name.
             returned: success
             type: str
-            sample: master     
+            sample: master
         id:
             description: Pull request id.
             returned: success
             type: int
-            sample: 2                      
+            sample: 2
         version:
             description: Pull request version.
             returned: success
@@ -173,7 +173,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]

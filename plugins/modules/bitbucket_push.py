@@ -13,13 +13,13 @@ DOCUMENTATION = r'''
 ---
 module: bitbucket_push
 short_description: Commit and push changes to the remote repository
-description: 
+description:
 - Pushes changes to remote Bitbucket repository.
 - Optionally, before pushing changes, it creates a new commit containing the current contents of the index and the working tree.
 - Returns the commit hash.
 - Authentication can be done with I(token) or with I(username) and I(password).
 author:
-  - Pawel Smolarz (pawel.smolarz@nordea.com) 
+  - Pawel Smolarz (pawel.smolarz@nordea.com)
   - Krzysztof Lewandowski (@klewan)
 version_added: 1.3.1
 options:
@@ -32,9 +32,9 @@ options:
     description:
     - Repository directory.
     - This must be a valid git repository.
-    type: str  
-    aliases: [ path ]         
-    required: true    
+    type: str
+    aliases: [ path ]
+    required: true
   msg:
     description:
     - Log message describing the changes.
@@ -42,15 +42,15 @@ options:
     required: true
   committer:
     description:
-    - A person who commits the code.      
+    - A person who commits the code.
     type: dict
-    required: true      
+    required: true
     suboptions:
       name:
         description:
         - The committer username.
         type: str
-        required: true    
+        required: true
       email:
         description:
         - The committer email address.
@@ -60,7 +60,7 @@ options:
     description:
     - Opitionally add a tag to the commit.
     type: str
-    required: false  
+    required: false
   delete:
     description:
     - Delete local repository after push to remote.
@@ -96,14 +96,14 @@ options:
     description:
     - Repository name.
     type: str
-    aliases: [ path ] 
+    aliases: [ path ]
     required: true
   project_key:
     description:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   validate_certs:
     description:
       - If C(no), SSL certificates will not be validated.
@@ -114,7 +114,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -140,8 +140,8 @@ EXAMPLES = r'''
     password: secrect
     repository: bar
     project_key: FOO
-    path: /tmp/bar  
-    commit: yes  
+    path: /tmp/bar
+    commit: yes
     msg: New commit message
     committer:
       name: jsmith
@@ -182,17 +182,17 @@ json:
             description: Commit message.
             returned: success
             type: str
-            sample: Commit message    
+            sample: Commit message
         before_commit_hexsha:
             description: A commit hash of the working tree before changes were committed.
             returned: success
             type: str
-            sample: "c1bd91851a8f5b2b147d252ba674329773e7f675"                      
+            sample: "c1bd91851a8f5b2b147d252ba674329773e7f675"
         after_commit_hexsha:
             description: New commit hash. Exposed only when changes were actually committed, i.e. when C(changed=true).
             returned: success
             type: str
-            sample: "06bdcc6594831af4fe869b87643efc609d7cd994" 
+            sample: "06bdcc6594831af4fe869b87643efc609d7cd994"
         tag:
             description: Commit tag.
             returned: success
@@ -225,18 +225,18 @@ def main():
         msg=dict(type='str', required=False, no_log=False, aliases=['message']),
         repodir=dict(type='str', required=True, no_log=False, aliases=['path']),
         committer=dict(
-            type='dict', 
+            type='dict',
             required=False, no_log=False,
             options=dict(
                 email=dict(type='str', required=True, no_log=False),
                 name=dict(type='str', required=True, no_log=False),
-            ),            
+            ),
         ),
-        tag=dict(type='str', required=False, no_log=False),        
+        tag=dict(type='str', required=False, no_log=False),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')],
@@ -248,14 +248,14 @@ def main():
     module.params['return_content'] = True
 
     project_key = module.params['project_key']
-    repository = module.params['repository'] 
+    repository = module.params['repository']
     msg = module.params['msg']
     committer = module.params['committer']
     commit = module.params['commit']
     repodir = module.params['repodir']
     tag = module.params['tag']
     actor_author = Actor( committer['name'], committer['email'] )
-    actor_committer = Actor( committer['name'], committer['email'] )    
+    actor_committer = Actor( committer['name'], committer['email'] )
 
     # Seed the result dict in the object
     result = dict(
@@ -295,7 +295,7 @@ def main():
     if os.path.exists(repodir):
         try:
             # Internally validates whether the path points to an actual repo.
-            repo = Repo(repodir)            
+            repo = Repo(repodir)
         except Exception as e:
             module.fail_json(msg='%s is not a valid git repository. Details: %s' % (repodir, to_native(e)))
     else:
@@ -319,14 +319,14 @@ def main():
             if not module.check_mode:
 
                 # Add untracked files to index
-                for file_add in repo.untracked_files:   
+                for file_add in repo.untracked_files:
                     repo.index.add([ file_add ])
 
                 # Add only diffs between index and working tree
                 for diff in repo.index.diff(None):
                     repo.index.add( list(set( [i for i in [ diff.a_path, diff.b_path ] if i] )) )
 
-                if tag is not None: 
+                if tag is not None:
                     repo.create_tag(tag)
 
                 repo.index.commit(msg, author=actor_author, committer=actor_committer)
@@ -350,7 +350,7 @@ def main():
         git_password = module.params['password']
 
     if not module.check_mode:
-        
+
         with repo.git.custom_environment(GIT_CONFIG_NOSYSTEM="true", GIT_USERNAME=module.params['username'], GIT_PASSWORD=git_password, GIT_ASKPASS=git_askpass_script):
             push_info = repo.remotes.origin.push(refspec=refspec)
 
@@ -372,4 +372,3 @@ def main():
 
 if __name__ == '__main__':
     main()
- 

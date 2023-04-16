@@ -26,13 +26,13 @@ options:
     - This can be absolute or relative.
     - Required when U(content) is not provided.
     type: path
-    required: false    
+    required: false
   content:
     description:
     - When used instead of C(src), sets the contents of a file directly to the specified value.
-    - Required when U(src) is not provided.    
+    - Required when U(src) is not provided.
     type: str
-    required: false      
+    required: false
   dest:
     description:
     - Path in Bitbucket repositorywhere the file should be copied to.
@@ -86,7 +86,7 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   validate_certs:
     description:
       - If C(no), SSL certificates will not be validated.
@@ -97,7 +97,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -153,20 +153,20 @@ project_key:
     description: Bitbucket project key.
     returned: always
     type: str
-    sample: FOO 
+    sample: FOO
 branch:
     description: Branch name.
-    returned: always  
+    returned: always
     type: str
     sample: master
 dest:
     description: Path in Bitbucket repositorywhere the file was copied to.
-    returned: always  
+    returned: always
     type: str
     sample: path/to/baz.yml
 src:
     description: Local path to a file which was copied to the Bitbucket Server repository.
-    returned: success  
+    returned: success
     type: str
     sample: /tmp/baz.yml
 json:
@@ -208,7 +208,7 @@ json:
             description: Timestamp.
             returned: success
             type: int
-            sample: 1618819213000            
+            sample: 1618819213000
         committerTimestamp:
             description: Timestamp.
             returned: success
@@ -218,17 +218,17 @@ json:
             description: Commit message.
             returned: success
             type: str
-            sample: "File updated using bitbucket_copy module"     
+            sample: "File updated using bitbucket_copy module"
         id:
             description: Commit id.
             returned: success
             type: str
-            sample: "2525b8cc320c6c5c71a84d1c21f0554b012214df"                      
+            sample: "2525b8cc320c6c5c71a84d1c21f0554b012214df"
         displayId:
             description: Commit id.
             returned: success
             type: str
-            sample: "2525b8cc320"              
+            sample: "2525b8cc320"
 '''
 
 
@@ -257,7 +257,7 @@ def copy_file(module, bitbucket, src_content=None, sourceCommitId=None):
     if sourceCommitId is not None:
         body['sourceCommitId'] = sourceCommitId
 
-    url = (BitbucketHelper.BITBUCKET_API_ENDPOINTS['repos-browse'] 
+    url = (BitbucketHelper.BITBUCKET_API_ENDPOINTS['repos-browse']
           + '/{path}').format(
             url=module.params['url'],
             projectKey=module.params['project_key'],
@@ -277,22 +277,22 @@ def copy_file(module, bitbucket, src_content=None, sourceCommitId=None):
         headers={
             'Content-type': content_type,
         },
-    ) 
+    )
 
-    if info['status'] == 200:     
+    if info['status'] == 200:
         return content
 
     if info['status'] == 400:
-        module.fail_json(msg='The branch or content parameters were not supplied.')    
+        module.fail_json(msg='The branch or content parameters were not supplied.')
 
     if info['status'] == 401:
-        module.fail_json(msg='The currently authenticated user does not have write permission for the given repository.') 
+        module.fail_json(msg='The currently authenticated user does not have write permission for the given repository.')
 
     if info['status'] == 404:
-        module.fail_json(msg='The repository does not exist.') 
+        module.fail_json(msg='The repository does not exist.')
 
     if info['status'] == 409:
-        module.fail_json(msg='The file already exists when trying to create a file, or the given content does not modify the file, or the file has changed since the given sourceCommitId.') 
+        module.fail_json(msg='The file already exists when trying to create a file, or the given content does not modify the file, or the file has changed since the given sourceCommitId.')
 
     if info['status'] != 200:
         module.fail_json(
@@ -320,7 +320,7 @@ def get_latest_commit(module, bitbucket):
                 raise AnsibleError('Unable to retrieve "%s" branch information: %s' % (module.params['branch'], to_native(e)))
 
 
-    url = (BitbucketHelper.BITBUCKET_API_ENDPOINTS['repos-commits'] 
+    url = (BitbucketHelper.BITBUCKET_API_ENDPOINTS['repos-commits']
           + '?limit=1&followRenames=true&ignoreMissing=true&merges=include&path={path}{since_until}').format(
             url=module.params['url'],
             projectKey=module.params['project_key'],
@@ -333,22 +333,22 @@ def get_latest_commit(module, bitbucket):
         api_url=url,
         method='GET',
     )
-    
+
     if info['status'] == 200:
         try:
             latest_commit_id = content['values'][0]['id']
         except Exception as e:
-            raise AnsibleError('Unable to retrieve latest commit id of "%s" branch: %s' % (module.params['branch'], to_native(e)))      
+            raise AnsibleError('Unable to retrieve latest commit id of "%s" branch: %s' % (module.params['branch'], to_native(e)))
         return latest_commit_id
 
     if info['status'] == 400:
-        module.fail_json(msg='One of the supplied commit IDs or refs was invalid.')    
+        module.fail_json(msg='One of the supplied commit IDs or refs was invalid.')
 
     if info['status'] == 401:
-        module.fail_json(msg='The currently authenticated user has insufficient permissions to view the repository.') 
+        module.fail_json(msg='The currently authenticated user has insufficient permissions to view the repository.')
 
     if info['status'] == 404:
-        module.fail_json(msg='The repository does not exist.') 
+        module.fail_json(msg='The repository does not exist.')
 
     return None
 
@@ -378,7 +378,7 @@ def get_dest_md5(module, bitbucket):
             file_content = content['content']
         else:
             file_content = content
-        return hashlib.md5(str(file_content).encode('utf-8')).hexdigest()        
+        return hashlib.md5(str(file_content).encode('utf-8')).hexdigest()
     else:
         return None
 
@@ -396,7 +396,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token'), ('src', 'content')],
         mutually_exclusive=[('username', 'token')]
@@ -419,7 +419,7 @@ def main():
     # Seed the result dict in the object
     result = dict(
         changed=False,
-        project_key=module.params['project_key'],        
+        project_key=module.params['project_key'],
         repository=module.params['repository'],
         dest=module.params['dest'],
         json={},
@@ -446,7 +446,7 @@ def main():
         src_md5 = hashlib.md5(str(src_content).encode('utf-8')).hexdigest()
     else:
         src_content = module.params['content']
-        src_md5 = hashlib.md5(str(src_content).encode('utf-8')).hexdigest()   
+        src_md5 = hashlib.md5(str(src_content).encode('utf-8')).hexdigest()
 
     # Return md5 of an existing file content in Bitbucket repository, if the file exists
     dest_md5 = get_dest_md5(module, bitbucket)

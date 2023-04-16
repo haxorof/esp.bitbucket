@@ -50,7 +50,7 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ] 
+    aliases: [ project ]
   repository:
     description:
     - Repository name.
@@ -66,7 +66,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -117,7 +117,7 @@ repository:
     description: Bitbucket repository name.
     returned: success
     type: str
-    sample: bar  
+    sample: bar
 restrictions:
     description: List of branch restrictions for the supplied project or repository.
     returned: always
@@ -134,14 +134,14 @@ restrictions:
                 id: RELEASE
                 type:
                     id: MODEL_CATEGORY
-                    name: Branching model category                    
+                    name: Branching model category
         scope:
             description: Scope.
             returned: success
             type: dict
             sample:
                 resourceId: 292
-                type: PROJECT                                 
+                type: PROJECT
         groups:
             description: Bitbucket groups.
             returned: success
@@ -177,7 +177,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]
@@ -187,7 +187,7 @@ def main():
 
     module.params['return_content'] = True
 
-    project_key = module.params['project_key'] 
+    project_key = module.params['project_key']
     repository = module.params['repository']
 
     # Seed the result dict in the object
@@ -205,7 +205,7 @@ def main():
         result['messages'].append('Project `{projectKey}` does not exist.'.format(
             projectKey=project_key
         ))
-    else:        
+    else:
         # When repository name is supplied but it does not exists, then return with a message.
         if (repository is not None) and (not bitbucket.get_repository_info(fail_when_not_exists=False, project_key=project_key, repository=repository)):
             result['messages'].append('Repository `{repository}` does not exist.'.format(

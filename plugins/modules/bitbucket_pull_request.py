@@ -100,7 +100,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -130,7 +130,7 @@ EXAMPLES = r'''
     from_branch: "develop"
     to_branch: "master"
     reviewers: [ m00001, m00002 ]
-    
+
 - name: Delete pull request on repository
   esp.bitbucket.bitbucket_pull_request:
     url: 'https://bitbucket.example.com'
@@ -272,7 +272,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password'), ('from_branch', 'to_branch')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')],

@@ -49,14 +49,14 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ] 
+    aliases: [ project ]
   filters:
     description:
     - If specified, only group or user names containing the supplied filter strings will be returned.
     - This can be '*' which means all groups and users.
     - Filters are concatenated with OR operator.
     type: list
-    required: false    
+    required: false
     default: [ '*' ]
   validate_certs:
     description:
@@ -68,7 +68,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -160,22 +160,22 @@ users:
                     description: Bitbucket user slug.
                     returned: success
                     type: str
-                    sample: admin      
+                    sample: admin
                 active:
                     description: Bitbucket user active status.
                     returned: success
                     type: bool
-                    sample: true     
+                    sample: true
                 displayName:
                     description: Bitbucket user displayName.
                     returned: success
                     type: str
-                    sample: admin    
+                    sample: admin
                 id:
                     description: Bitbucket user id.
                     returned: success
                     type: int
-                    sample: 9000                   
+                    sample: 9000
         permission:
             description: Bitbucket permission name.
             returned: success
@@ -195,7 +195,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]
@@ -205,7 +205,7 @@ def main():
 
     module.params['return_content'] = True
 
-    project_key = module.params['project_key']    
+    project_key = module.params['project_key']
 
     # Parse `filters` parameter and create list of filters.
     # It's possible someone passed a comma separated string, so we should handle that.
@@ -236,7 +236,7 @@ def main():
         if '*' in filters:
             result['groups'].extend( bitbucket.get_project_permissions_info(fail_when_not_exists=False, project_key=project_key, scope='groups', filter=None) )
             result['users'].extend( bitbucket.get_project_permissions_info(fail_when_not_exists=False, project_key=project_key, scope='users', filter=None) )
-        else:    
+        else:
             for filter in filters:
                 result['groups'].extend( bitbucket.get_project_permissions_info(fail_when_not_exists=False, project_key=project_key, scope='groups', filter=filter) )
                 result['users'].extend( bitbucket.get_project_permissions_info(fail_when_not_exists=False, project_key=project_key, scope='users', filter=filter) )

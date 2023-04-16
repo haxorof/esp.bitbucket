@@ -49,13 +49,13 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ] 
+    aliases: [ project ]
   repository:
     description:
     - Repository name.
     type: str
     required: true
-    aliases: [ name ]     
+    aliases: [ name ]
   user:
     description:
     - Bitbucket user to grant or revoke permission from.
@@ -67,7 +67,7 @@ options:
     - Bitbucket group to grant or revoke permission from.
     - This is only needed when not using I(user).
     type: str
-    required: false  
+    required: false
   permission:
     description:
     - The permission to grant.
@@ -85,7 +85,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -134,7 +134,7 @@ repository:
     description: Bitbucket repository name.
     returned: always
     type: str
-    sample: bar      
+    sample: bar
 permission:
     description: The permission to grant. Empty string '' means revoke all grants form a user or group.
     returned: always
@@ -173,7 +173,7 @@ def grant_repository_permissions(module, bitbucket, fail_when_not_exists=False, 
             permission=permission,
         ),
         method='PUT',
-    )              
+    )
 
     if info['status'] == 204:
         return content
@@ -225,7 +225,7 @@ def revoke_repository_permissions(module, bitbucket, fail_when_not_exists=False,
             name=name,
         ),
         method='DELETE',
-    )              
+    )
 
     if info['status'] == 204:
         return content
@@ -267,7 +267,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token'), ('user', 'group')],
         mutually_exclusive=[('username', 'token'), ('user', 'group')]
@@ -278,7 +278,7 @@ def main():
     module.params['return_content'] = True
 
     project_key = module.params['project_key']
-    repository = module.params['repository']     
+    repository = module.params['repository']
 
     # Seed the result dict in the object
     result = dict(
@@ -314,15 +314,15 @@ def main():
                 # When the user is on the list and their grants should be revoked..
                 if (module.params['permission'] == '') and (any(user['user']['name'].lower() == module.params['user'].lower() for user in users_with_access)):
                     if not module.check_mode:
-                        result['json'] = revoke_repository_permissions(module=module, bitbucket=bitbucket, fail_when_not_exists=True, 
+                        result['json'] = revoke_repository_permissions(module=module, bitbucket=bitbucket, fail_when_not_exists=True,
                                                                        project_key=project_key, repository=repository, scope='users', name=module.params['user'])
                     result['changed'] = True
 
                 # When either the user is NOT on the list or the user is on the list and their grants should be changed (promoted or demoted)..
                 if (module.params['permission'] != '') and (not any(user['user']['name'].lower() == module.params['user'].lower() and user['permission'].upper() == module.params['permission'].upper() for user in users_with_access)):
                     if not module.check_mode:
-                        result['json'] = grant_repository_permissions(module=module, bitbucket=bitbucket, fail_when_not_exists=True, 
-                                                                      project_key=project_key, repository=repository, scope='users', name=module.params['user'], 
+                        result['json'] = grant_repository_permissions(module=module, bitbucket=bitbucket, fail_when_not_exists=True,
+                                                                      project_key=project_key, repository=repository, scope='users', name=module.params['user'],
                                                                       permission=module.params['permission'])
                     result['changed'] = True
 
@@ -334,15 +334,15 @@ def main():
                 # When the group is on the list and their grants should be revoked..
                 if (module.params['permission'] == '') and (any(group['group']['name'].lower() == module.params['group'].lower() for group in groups_with_access)):
                     if not module.check_mode:
-                        result['json'] = revoke_repository_permissions(module=module, bitbucket=bitbucket, fail_when_not_exists=True, 
+                        result['json'] = revoke_repository_permissions(module=module, bitbucket=bitbucket, fail_when_not_exists=True,
                                                                        project_key=project_key, repository=repository, scope='groups', name=module.params['group'])
                     result['changed'] = True
 
                 # When either the group is NOT on the list or the group is on the list and their grants should be changed (promoted or demoted)..
                 if (module.params['permission'] != '') and (not any(group['group']['name'].lower() == module.params['group'].lower() and group['permission'].upper() == module.params['permission'].upper() for group in groups_with_access)):
                     if not module.check_mode:
-                        result['json'] = grant_repository_permissions(module=module, bitbucket=bitbucket, fail_when_not_exists=True, 
-                                                                      project_key=project_key, repository=repository, scope='groups', name=module.params['group'], 
+                        result['json'] = grant_repository_permissions(module=module, bitbucket=bitbucket, fail_when_not_exists=True,
+                                                                      project_key=project_key, repository=repository, scope='groups', name=module.params['group'],
                                                                       permission=module.params['permission'])
                     result['changed'] = True
 
