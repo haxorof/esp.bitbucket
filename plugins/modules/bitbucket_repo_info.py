@@ -58,7 +58,7 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   validate_certs:
     description:
       - If C(no), SSL certificates will not be validated.
@@ -69,7 +69,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -115,7 +115,7 @@ messages:
     returned: always
     type: list
     sample:
-      - Repository `baz` does not exist. 
+      - Repository `baz` does not exist.
 repositories:
     description: List of repositories.
     returned: always
@@ -155,7 +155,7 @@ repositories:
             description: Bitbucket repository name.
             returned: success
             type: str
-            sample: bar            
+            sample: bar
         state:
             description: Bitbucket repository state, after execution.
             returned: success
@@ -165,7 +165,7 @@ repositories:
             description: Bitbucket repository state message, after execution.
             returned: success
             type: str
-            sample: Available    
+            sample: Available
         links:
             description: Links to Bitbucket repository.
             returned: success
@@ -177,9 +177,9 @@ repositories:
                     type: list
                     elements: dict
                     sample:
-                        - href: https://bitbucket.example.com/scm/foo/bar.git  
+                        - href: https://bitbucket.example.com/scm/foo/bar.git
                           name: http
-                        - href: ssh://git@bitbucket.example.com:7999/foo/bar.git  
+                        - href: ssh://git@bitbucket.example.com:7999/foo/bar.git
                           name: ssh
                 self:
                     description: Links to Bitbucket repository.
@@ -187,7 +187,7 @@ repositories:
                     type: list
                     elements: dict
                     sample:
-                        - href: https://bitbucket.example.com/projects/FOO/repos/bar/browse        
+                        - href: https://bitbucket.example.com/projects/FOO/repos/bar/browse
         project:
             description: Information about Bitbucket project.
             returned: success
@@ -212,7 +212,7 @@ repositories:
                     description: Bitbucket project description.
                     returned: success
                     type: str
-                    sample: This is a Bitbucket project                   
+                    sample: This is a Bitbucket project
                 public:
                     description: Whether or not the project is public.
                     returned: success
@@ -229,7 +229,7 @@ repositories:
                     type: list
                     elements: dict
                     sample:
-                        - href: https://bitbucket.example.com/projects/FOO  
+                        - href: https://bitbucket.example.com/projects/FOO
 '''
 
 
@@ -240,12 +240,12 @@ from ansible_collections.esp.bitbucket.plugins.module_utils.bitbucket import Bit
 def main():
     argument_spec = BitbucketHelper.bitbucket_argument_spec()
     argument_spec.update(
-        project_key=dict(type='str', required=True, no_log=False, aliases=['project']),        
+        project_key=dict(type='str', required=True, no_log=False, aliases=['project']),
         repository=dict(type='list', elements='str', no_log=False, default=[ '*' ]),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]
@@ -253,7 +253,7 @@ def main():
 
     bitbucket = BitbucketHelper(module)
 
-    module.params['return_content'] = True    
+    module.params['return_content'] = True
 
     # Parse `repository` parameter and create list of repositories.
     # It's possible someone passed a comma separated string, so we should handle that.
@@ -291,7 +291,7 @@ def main():
                     result['messages'].append('Repository `{repositorySlug}` does not exist.'.format(
                         repositorySlug=repository
                     ))
-                else:                
+                else:
                   result['repositories'].append(repo_response)
 
     module.exit_json(**result)

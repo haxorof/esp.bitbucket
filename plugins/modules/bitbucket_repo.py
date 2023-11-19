@@ -58,7 +58,7 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   state:
     description:
     - Whether the repository should exist or not.
@@ -82,7 +82,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -171,7 +171,7 @@ project:
             type: list
             elements: dict
             sample:
-                - href: https://bitbucket.example.com/projects/FOO  
+                - href: https://bitbucket.example.com/projects/FOO
 links:
     description: Links to Bitbucket repository (if I(state=present)).
     returned: success
@@ -183,9 +183,9 @@ links:
             type: list
             elements: dict
             sample:
-                - href: https://bitbucket.example.com/scm/foo/bar.git  
+                - href: https://bitbucket.example.com/scm/foo/bar.git
                   name: http
-                - href: ssh://git@bitbucket.example.com:7999/foo/bar.git  
+                - href: ssh://git@bitbucket.example.com:7999/foo/bar.git
                   name: ssh
         self:
             description: Links to Bitbucket repository.
@@ -193,7 +193,7 @@ links:
             type: list
             elements: dict
             sample:
-                - href: https://bitbucket.example.com/projects/FOO/repos/bar/browse   
+                - href: https://bitbucket.example.com/projects/FOO/repos/bar/browse
 forkable:
     description: Source file used for the copy on the target machine (if I(state=present)).
     returned: success
@@ -298,7 +298,7 @@ def create_repository(module, bitbucket):
 
     if info['status'] != 201:
         module.fail_json(msg='Failed to create repository `{repositorySlug}` in the supplied projectKey `{projectKey}`: {info}'.format(
-            repositorySlug=module.params['repository'],            
+            repositorySlug=module.params['repository'],
             projectKey=module.params['project_key'],
             info=info,
         ))
@@ -331,7 +331,7 @@ def delete_repository(module, bitbucket):
 
     if info['status'] != 202:
         module.fail_json(msg='Failed to delete repository `{repositorySlug}` in the supplied projectKey `{projectKey}`: {info}'.format(
-            repositorySlug=module.params['repository'],            
+            repositorySlug=module.params['repository'],
             projectKey=module.params['project_key'],
             info=info,
         ))
@@ -348,7 +348,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]

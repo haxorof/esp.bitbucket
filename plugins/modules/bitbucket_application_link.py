@@ -49,7 +49,7 @@ options:
     description:
     - Retrieve application links matching the supplied I(applink) filter.
     - This can be '*' which means all application links.
-    - One may refer to an application link either by its ID or its name.    
+    - One may refer to an application link either by its ID or its name.
     type: list
     required: false
     default: [ '*' ]
@@ -63,7 +63,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -96,7 +96,7 @@ EXAMPLES = r'''
         (...)
         Gzr9C9mYr5zh15Rd7ygubYT1rKPTnQEuQMZpki9rsS3cKEYGyIX6nFLJdpZHK7hL
         2QIDAQAB
-        -----END PUBLIC KEY-----        
+        -----END PUBLIC KEY-----
     state: present
     validate_certs: no
   register: _result
@@ -115,17 +115,17 @@ EXAMPLES = r'''
 
 RETURN = r'''
 json:
-    description: Details of application link.    
+    description: Details of application link.
     returned: success
     type: dict
-    sample:        
+    sample:
         id: "227dd1d7-f6d6-34a5-b046-5663fb518691"
         status:
             resources-created:
                 link:
                     "@href": "https://bitbucket.example.com/rest/applinks/3.0/applicationlink/227dd1d7-f6d6-34a5-b046-5663fb518691"
                     "@rel": "self"
-            status-code: "201"            
+            status-code: "201"
 '''
 
 import re
@@ -144,9 +144,9 @@ def create_application_link(module, bitbucket, data=None):
     if 'name' not in module.params['applink']:
         module.fail_json(msg='`applink.name` is required when the `state` is `present`')
     if 'rpcUrl' not in module.params['applink']:
-        module.fail_json(msg='`applink.rpcUrl` is required when the `state` is `present`')        
+        module.fail_json(msg='`applink.rpcUrl` is required when the `state` is `present`')
     if 'displayUrl' not in module.params['applink']:
-        module.fail_json(msg='`applink.displayUrl` is required when the `state` is `present`')        
+        module.fail_json(msg='`applink.displayUrl` is required when the `state` is `present`')
 
     data = {
         'id': None,
@@ -162,7 +162,7 @@ def create_application_link(module, bitbucket, data=None):
         data=data,
     )
 
-    if info['status'] == 201:        
+    if info['status'] == 201:
 
         try:
             js = json.loads(json.dumps(xmltodict.parse(content['content'])))
@@ -173,7 +173,7 @@ def create_application_link(module, bitbucket, data=None):
             ret = js
         except Exception as e:
             ret = content
-            
+
         return ret
 
     if info['status'] != 201:
@@ -192,9 +192,9 @@ def update_application_link(module, bitbucket, applicationLinkID=None, data=None
     if 'key' not in module.params['applink']:
         module.fail_json(msg='`applink.key` is required when the `state` is `present`')
     if 'name' not in module.params['applink']:
-        module.fail_json(msg='`applink.name` is required when the `state` is `present`')        
+        module.fail_json(msg='`applink.name` is required when the `state` is `present`')
     if 'publicKey' not in module.params['applink']:
-        module.fail_json(msg='`applink.publicKey` is required when the `state` is `present`')        
+        module.fail_json(msg='`applink.publicKey` is required when the `state` is `present`')
 
     data = {
         'key': module.params['applink']['key'],
@@ -217,7 +217,7 @@ def update_application_link(module, bitbucket, applicationLinkID=None, data=None
         data=data,
     )
 
-    if info['status'] == 201:            
+    if info['status'] == 201:
         try:
             js = json.loads(json.dumps(xmltodict.parse(content['content'])))
             if isinstance(js, dict):
@@ -227,7 +227,7 @@ def update_application_link(module, bitbucket, applicationLinkID=None, data=None
             ret = js
         except Exception as e:
             ret = content
-            
+
         return ret
 
     if info['status'] != 201:
@@ -253,8 +253,8 @@ def delete_application_link(module, bitbucket, id=None, fail_when_not_exists=Fal
         method='DELETE',
     )
 
-    if info['status'] == 204:        
-        return content        
+    if info['status'] == 204:
+        return content
 
     if info['status'] != 204:
         if fail_when_not_exists:
@@ -262,7 +262,7 @@ def delete_application_link(module, bitbucket, id=None, fail_when_not_exists=Fal
                 info=info,
             ))
         else:
-            return { 
+            return {
                 'id': id,
                 'status': info['status'],
                 'info': info,
@@ -280,7 +280,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')],

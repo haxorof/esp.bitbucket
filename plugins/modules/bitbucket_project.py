@@ -58,7 +58,7 @@ options:
     - Required when I(state=present).
     type: str
     required: false
-    aliases: [ project_name ]      
+    aliases: [ project_name ]
   description:
     description:
     - Bitbucket project description.
@@ -69,7 +69,7 @@ options:
     description:
     - Bitbucket project custom avatar. Base64-encoded image data.
     type: str
-    required: false    
+    required: false
   state:
     description:
     - Whether the project should exist or not.
@@ -93,7 +93,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -174,7 +174,7 @@ id:
     description: Project ID (if I(state=present)).
     returned: success
     type: int
-    sample: 200 
+    sample: 200
 links:
     description: Links to Bitbucket project (if I(state=present)).
     returned: success
@@ -186,7 +186,7 @@ links:
             type: list
             elements: dict
             sample:
-                - href: https://bitbucket.example.com/projects/FOO  
+                - href: https://bitbucket.example.com/projects/FOO
 '''
 
 from ansible.module_utils.basic import AnsibleModule
@@ -281,7 +281,7 @@ def delete_project(module, bitbucket):
         ))
 
     if info['status'] != 204:
-        module.fail_json(msg='Failed to delete project `{projectKey}`: {info}'.format(           
+        module.fail_json(msg='Failed to delete project `{projectKey}`: {info}'.format(
             projectKey=module.params['project_key'],
             info=info,
         ))
@@ -308,7 +308,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password'),('name', 'description')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]

@@ -5,7 +5,7 @@ namespace: "esp"
 name: "bitbucket"
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 1.4.1
+version: 1.5.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -14,6 +14,7 @@ readme: README.md
 authors:
 - Krzysztof Lewandowski (@klewan)
 - Pawel Smolarz <Pawel.Smolarz@nordea.com>
+- Björn Oscarsson (@haxorof)
 
 ### OPTIONAL but strongly recommended
 
@@ -36,7 +37,14 @@ tags:
 dependencies: {}
 
 # The URL of the originating SCM repository
-repository: https://github.com/NordeaOSS/esp.bitbucket.git
+repository: https://github.com/haxorof/esp.bitbucket.git
 
 # The URL to any online docs
-documentation: https://github.com/NordeaOSS/esp.bitbucket/blob/master/README.md
+documentation: https://github.com/haxorof/esp.bitbucket/blob/main/README.md
+
+build_ignore:
+- .env
+- '*.tar.gz'
+- test
+- tools
+- playbooks

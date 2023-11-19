@@ -13,12 +13,12 @@ DOCUMENTATION = r'''
 ---
 module: bitbucket_clone
 short_description: Clone a repository from Bitbucket Server
-description: 
+description:
 - Clones a repository from Bitbucket Server.
 - Returns the latest commit hash of the cloned repository branch.
 - Authentication can be done with I(token) or with I(username) and I(password).
 author:
-  - Pawel Smolarz (pawel.smolarz@nordea.com) 
+  - Pawel Smolarz (pawel.smolarz@nordea.com)
   - Krzysztof Lewandowski (@klewan)
 version_added: 1.3.0
 options:
@@ -26,20 +26,20 @@ options:
     description:
     - A local destination directory where the repository will be cloned.
     - This must be a valid git repository.
-    type: str  
-    aliases: [ path ]         
-    required: true    
+    type: str
+    aliases: [ path ]
+    required: true
   force:
     description:
     - Delete a local destination directory before cloning, if it already exists.
     type: bool
-    default: no  
-    required: false     
+    default: no
+    required: false
   branch:
     description:
     - A repository branch to clone.
     type: str
-    default: master             
+    default: master
     required: false
   url:
     description:
@@ -71,14 +71,14 @@ options:
     description:
     - Repository name.
     type: str
-    aliases: [ path ] 
+    aliases: [ path ]
     required: true
   project_key:
     description:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   validate_certs:
     description:
       - If C(no), SSL certificates will not be validated.
@@ -89,7 +89,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -116,7 +116,7 @@ EXAMPLES = r'''
     repository: bar
     project_key: FOO
     branch: master
-    path: /tmp/bar  
+    path: /tmp/bar
     force: yes
     validate_certs: no
   register: _result
@@ -133,12 +133,12 @@ json:
     description: Dictionary with clone details.
     returned: success
     type: dict
-    contains:  
+    contains:
         commit_hexsha:
             description: A commit hash of the working tree of the cloned repository branch.
             returned: success
             type: str
-            sample: "9074a0e7140e120ae927cb817c0d6fc7ebf6dd37"                      
+            sample: "9074a0e7140e120ae927cb817c0d6fc7ebf6dd37"
 '''
 
 import os
@@ -161,7 +161,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')],
@@ -172,7 +172,7 @@ def main():
     module.params['return_content'] = True
 
     project_key = module.params['project_key']
-    repository = module.params['repository'] 
+    repository = module.params['repository']
     repodir = module.params['repodir']
     branch = module.params['branch']
 
@@ -207,7 +207,7 @@ def main():
             result['changed'] = True
             if not module.check_mode:
                 try:
-                    shutil.rmtree(repodir, ignore_errors=True)          
+                    shutil.rmtree(repodir, ignore_errors=True)
                 except Exception as e:
                     module.fail_json(msg='Error while deleting %s directory. Details: %s' % (repodir, to_native(e)))
         else:
@@ -224,7 +224,7 @@ def main():
     remote = "%s/scm/%s/%s.git" % (module.params['url'], project_key, repository)
 
     if not module.check_mode:
-        
+
         try:
             repo = Repo.clone_from(url=remote, to_path=repodir, branch=branch, env=dict(GIT_CONFIG_NOSYSTEM="true", GIT_USERNAME=module.params['username'], GIT_PASSWORD=git_password, GIT_ASKPASS=git_askpass_script))
         except Exception as e:
@@ -240,4 +240,3 @@ def main():
 
 if __name__ == '__main__':
     main()
- 

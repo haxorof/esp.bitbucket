@@ -56,7 +56,7 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   branch:
     description:
     - Retrieve the branches matching the supplied I(branch) filter.
@@ -74,7 +74,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -126,7 +126,7 @@ messages:
     returned: always
     type: list
     sample:
-      - Repository `bar2` does not exist. 
+      - Repository `bar2` does not exist.
 branches:
     description: List of repository branches.
     returned: always
@@ -173,12 +173,12 @@ def main():
     argument_spec = BitbucketHelper.bitbucket_argument_spec()
     argument_spec.update(
         repository=dict(type='str', required=True, no_log=False, aliases=['name']),
-        project_key=dict(type='str', required=True, no_log=False, aliases=['project']),        
+        project_key=dict(type='str', required=True, no_log=False, aliases=['project']),
         branch=dict(type='list', elements='str', no_log=False, default=[ '*' ]),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]
@@ -186,7 +186,7 @@ def main():
 
     bitbucket = BitbucketHelper(module)
 
-    module.params['return_content'] = True    
+    module.params['return_content'] = True
 
     # Parse `branch` parameter and create list of branches.
     # It's possible someone passed a comma separated string, so we should handle that.

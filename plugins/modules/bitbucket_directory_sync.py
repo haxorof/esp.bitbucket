@@ -48,7 +48,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -169,7 +169,7 @@ def login_to_bitbucket_server(module, bitbucket):
         data=data,
         headers=headers,
     )
-    
+
     if info['status'] == 200:
         return info
     else:
@@ -229,7 +229,7 @@ def main():
     argument_spec = BitbucketHelper.bitbucket_argument_spec()
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
     )
 

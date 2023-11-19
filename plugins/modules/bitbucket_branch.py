@@ -57,20 +57,20 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   branch:
     description:
     - Branch name to create or delete
     type: str
     required: true
-    aliases: [ name ]    
+    aliases: [ name ]
   from_branch:
     description:
     - New branch will be created from this branch.
     - Required when I(state=present).
     type: str
     default: master
-    required: false    
+    required: false
   state:
     description:
     - Whether the branch should exist or not. Only creation allowed
@@ -100,7 +100,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -129,7 +129,7 @@ EXAMPLES = r'''
     branch: feature/baz
     from_branch: master
     is_default: True
-    
+
 - name: Create branch
   esp.bitbucket.bitbucket_branch:
     url: 'https://bitbucket.example.com'
@@ -165,17 +165,17 @@ repository:
     description: Bitbucket repository name.
     returned: always
     type: str
-    sample: bar      
+    sample: bar
 branch:
     description: A specific branch name.
     returned: always
     type: str
-    sample: develop  
+    sample: develop
 from_branch:
     description: A source branch name which a new branch is created from.
     returned: success
     type: str
-    sample: master    
+    sample: master
 state:
     description: Branch state, either I(present) or I(absent).
     returned: success
@@ -317,7 +317,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]

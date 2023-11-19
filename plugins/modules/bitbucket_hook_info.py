@@ -1,8 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright: (c) 2021, Krzysztof Lewandowski <krzysztof.lewandowski@nordea.com>
-# Copyright: (c) 2021, Pawel Smolarz <pawel.smolarz@nordea.com>
+# Copyright: Contributors to the esp.bitbucket project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
@@ -10,15 +9,14 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
-module: bitbucket_default_branch
-short_description: Update the default branch of a repository
+module: bitbucket_hook_info
+short_description: Get information about Hooks on Bitbucket Server
 description:
-- Set the default branch of a repository.
+- Get information about Hooks on Bitbucket Server.
 - Authentication can be done with I(token) or with I(username) and I(password).
 author:
-  - Krzysztof Lewandowski
-  - Pawel Smolarz
-version_added: 1.1.0
+  - Björn Oscarsson
+version_added: 1.5.0
 options:
   url:
     description:
@@ -57,11 +55,10 @@ options:
     type: str
     required: true
     aliases: [ project ]
-  branch:
+  hook_id:
     description:
-    - Branch name to set as default
+    - Bitbucket hook ID.
     type: str
-    default: develop
     required: true
   return_content:
     description:
@@ -96,50 +93,78 @@ notes:
 '''
 
 EXAMPLES = r'''
-- name: Update the default branch of a repository
-  esp.bitbucket.bitbucket_default_branch:
+- name: Get information about hooks
+  esp.bitbucket.bitbucket_hook_info:
     url: 'https://bitbucket.example.com'
     username: jsmith
     password: secrect
     repository: bar
     project_key: FOO
+    hook_id: com.nerdwin15.stash-stash-webhook-jenkins:jenkinsPostReceiveHook
     validate_certs: no
-    branch: develop
-'''
-
-RETURN = r'''
-project_key:
-    description: Bitbucket project key.
-    returned: always
-    type: str
-    sample: FOO
-repository:
-    description: Bitbucket repository name.
-    returned: always
-    type: str
-    sample: bar
-branch:
-    description: Branch name to set as default.
-    returned: always
-    type: str
-    sample: master
-isDefault:
-    description: Whether the branch is a default branch for the supplied repository.
-    returned: success
-    type: bool
-    sample: true
 '''
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.esp.bitbucket.plugins.module_utils.bitbucket import BitbucketHelper
 
+def get_hook_info(module, bitbucket):
+    is_enabled = False
+    hook_endpoint = 'hook'
+    if (bitbucket.module.params['repository'] == ''):
+        hook_endpoint = 'hook-project'
+    info, content = bitbucket.request(
+        api_url=(bitbucket.BITBUCKET_API_ENDPOINTS[hook_endpoint]).format(
+            url=bitbucket.module.params['url'],
+            projectKey=bitbucket.module.params['project_key'],
+            repositorySlug=bitbucket.module.params['repository'],
+            hookId=module.params['hook_id'],
+        ),
+        method='GET',
+    )
+
+    if info['status'] == 200:
+      is_enabled = content['enabled']
+      info, content = bitbucket.request(
+          api_url=(bitbucket.BITBUCKET_API_ENDPOINTS[hook_endpoint] + '/settings').format(
+              url=bitbucket.module.params['url'],
+              projectKey=bitbucket.module.params['project_key'],
+              repositorySlug=bitbucket.module.params['repository'],
+              hookId=module.params['hook_id'],
+          ),
+          method='GET',
+      )
+
+    if info['status'] in [200,201]:
+        content.pop('fetch_url_retries', None)
+        return content, is_enabled
+
+    if info['status'] == 401:
+        bitbucket.module.fail_json(
+            msg='The currently authenticated user has insufficient permissions to read `{repositorySlug}` repository.'.format(
+                repositorySlug=bitbucket.module.params['repository'],
+            ))
+
+    if info['status'] == 404:
+        bitbucket.module.fail_json(msg='`{repositorySlug}` repository does not exist.'.format(
+            repositorySlug=bitbucket.module.params['repository'],
+        ))
+
+    if info['status'] != 200:
+        bitbucket.module.fail_json(
+            msg='Failed to retrieve branches data which matches the supplied projectKey `{projectKey}` and repositorySlug `{repositorySlug}`: {info}'.format(
+                projectKey=bitbucket.module.params['project_key'],
+                repositorySlug=bitbucket.module.params['repository'],
+                info=info,
+            ))
+
+    return content, is_enabled
 
 def main():
     argument_spec = BitbucketHelper.bitbucket_argument_spec()
     argument_spec.update(
-        repository=dict(type='str', required=True, no_log=False),
+        repository=dict(type='str', default='', no_log=False),
         project_key=dict(type='str', required=True, no_log=False, aliases=['project']),
-        branch=dict(type='str', default='develop'),
+        hook_id=dict(type='str', required=True, aliases=['hid']),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -151,48 +176,18 @@ def main():
 
     bitbucket = BitbucketHelper(module)
 
-    branch = module.params['branch']
-    project_key = module.params['project_key']
-    repository = module.params['repository']
-
     # Seed the result dict in the object
     result = dict(
         changed=False,
-        isDefault=True,
-        project_key=project_key,
-        repository=repository,
-        branch=branch,
+        project_key=module.params['project_key'],
+        repository=module.params['repository'],
+        hook_id=module.params['hook_id'],
+        messages=[],
         json={},
     )
 
-    # Check if project exists.
-    if not bitbucket.get_project_info(fail_when_not_exists=False, project_key=project_key):
-        module.fail_json(msg='Project `{projectKey}` does not exist.'.format(
-            projectKey=project_key,
-        ))
-
-    # Check if repository exists.
-    if not bitbucket.get_repository_info(fail_when_not_exists=False, project_key=project_key, repository=repository):
-        module.fail_json(msg='Repository `{repository}` does not exist.'.format(
-            repository=repository,
-        ))
-
-    # Retrieve existing branches information (if any)
-    existing_branches = bitbucket.get_branches_info(fail_when_not_exists=False, filter=None)
-
-    # Check if the supplied branch exists
-    if any(d.get('displayId', 'non_existing_branch') == branch for d in existing_branches):
-        # Update the default branch of a repository, if the supplied branch exists and is not set as default one
-        if not any(d.get('displayId', 'non_existing_branch') == branch and d.get('isDefault', False) for d in existing_branches):
-            if not module.check_mode:
-                result['json'] = bitbucket.set_default_branch(branch=branch)
-            result['changed'] = True
-    else:
-        module.fail_json(msg='Branch `{branch}` does not exist in `{repositorySlug}` repository'.format(
-            branch=branch,
-            repositorySlug=repository,
-        ))
-
+    # Retrieve existing webhooks information (if any)
+    result['json'], result['enabled'] = get_hook_info(module, bitbucket)
     module.exit_json(**result)
 
 if __name__ == '__main__':

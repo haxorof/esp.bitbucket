@@ -64,7 +64,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -103,7 +103,7 @@ messages:
     returned: always
     type: list
     sample:
-      - Repository `bar2` does not exist. 
+      - Repository `bar2` does not exist.
 projects:
     description: List of Bitbucket projects.
     returned: always
@@ -138,7 +138,7 @@ projects:
             description: Project ID.
             returned: success
             type: int
-            sample: 200 
+            sample: 200
         links:
             description: Links to Bitbucket project.
             returned: success
@@ -150,7 +150,7 @@ projects:
                     type: list
                     elements: dict
                     sample:
-                        - href: https://bitbucket.example.com/projects/FOO  
+                        - href: https://bitbucket.example.com/projects/FOO
 '''
 
 from ansible.module_utils.basic import AnsibleModule
@@ -164,7 +164,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]
@@ -172,7 +172,7 @@ def main():
 
     bitbucket = BitbucketHelper(module)
 
-    module.params['return_content'] = True    
+    module.params['return_content'] = True
 
     # Parse `project_key` parameter and create list of projects.
     # It's possible someone passed a comma separated string, so we should handle that.
@@ -194,7 +194,7 @@ def main():
     # Retrieve project information
     if '*' in project_keys:
         result['projects'] = bitbucket.get_all_projects_info(fail_when_not_exists=False)
-    else:    
+    else:
         for project_key in project_keys:
             # Check if projects exist. Retrun message if it does not exist.
             project_response = bitbucket.get_project_info(fail_when_not_exists=False, project_key=project_key)

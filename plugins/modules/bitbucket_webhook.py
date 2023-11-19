@@ -54,7 +54,7 @@ options:
     - Bitbucket project key.
     type: str
     required: true
-    aliases: [ project ]  
+    aliases: [ project ]
   webhook_name:
     description:
     - Webhook name to create
@@ -98,7 +98,7 @@ options:
     description:
       - If C(no), it will not use a proxy, even if one is defined in an environment variable on the target hosts.
     type: bool
-    default: yes 
+    default: yes
   sleep:
     description:
       - Number of seconds to sleep between API retries.
@@ -149,8 +149,14 @@ def create_webhook(module, bitbucket):
         },
     )
 
-    if info['status'] == 201:
+    if info['status'] in [200, 201]:
         return content
+
+    if info['status'] == 400:
+        module.fail_json(msg='Failed to create webhook `{webhookName}` on `{repositorySlug}` due to invalid or not supplied parameters'.format(
+            webhookName=module.params['webhook_name'],
+            repositorySlug=module.params['repository'],
+        ))
 
     if info['status'] == 401:
         module.fail_json(msg='The currently authenticated user has insufficient permissions to write to `{repositorySlug}` repository'.format(
@@ -159,10 +165,95 @@ def create_webhook(module, bitbucket):
 
     if info['status'] == 404:
         module.fail_json(msg='Repository `{repositorySlug}` does not exist.'.format(
-            repositorySlug=repository
+            repositorySlug=module.params['repository']
         ))
 
-    return None
+    module.fail_json(msg='Error! Unhandled status `{status}`, bug in Ansible module?'.format(
+        status=info['status']
+    ))
+    return content
+
+def delete_webhook(module, bitbucket, webhook):
+    info, content = bitbucket.request(
+        api_url=bitbucket.BITBUCKET_API_ENDPOINTS['webhooks-deleteupdate'].format(
+            url=module.params['url'],
+            projectKey=module.params['project_key'],
+            repositorySlug=module.params['repository'],
+            id=webhook["id"],
+        ),
+        method='DELETE',
+    )
+
+    if info['status'] == 204:
+        return content
+
+    if info['status'] == 401:
+        module.fail_json(msg='The currently authenticated user has insufficient permissions to delete webhooks in the repository `{repositorySlug}`.'.format(
+            repositorySlug=module.params['repository'],
+        ))
+
+    if info['status'] == 404:
+        module.fail_json(msg='The specified repository `{repositorySlug}` does not exist, or webhook `{webhookName}` does not exist in this repository.'.format(
+            repositorySlug=module.params['repository'],
+            webhookName=webhook["name"]
+        ))
+
+    module.fail_json(msg='Error! Unhandled status `{status}`, bug in Ansible module?'.format(
+        status=info['status']
+    ))
+    return content
+
+def update_webhook(module, bitbucket, webhook):
+    existing_data = {
+            'name': webhook['name'],
+            'url':  webhook['url'],
+            'events': webhook['events'],
+            'active': 'true'
+        }
+    new_data = {
+            'name': module.params['webhook_name'],
+            'url':  module.params['webhook_url'],
+            'events': module.params['event'].split(','),
+            'active': 'true'
+        }
+
+    if (existing_data == new_data):
+        return webhook, False
+
+    info, content = bitbucket.request(
+        api_url=bitbucket.BITBUCKET_API_ENDPOINTS['webhooks-deleteupdate'].format(
+            url=module.params['url'],
+            projectKey=module.params['project_key'],
+            repositorySlug=module.params['repository'],
+            id=webhook["id"],
+        ),
+        method='PUT',
+        data={
+            'name': module.params['webhook_name'],
+            'url':  module.params['webhook_url'],
+            'events': module.params['event'].split(','),
+            'active': 'true'
+        },
+    )
+
+    if info['status'] == 200:
+        return content, True
+
+    if info['status'] == 401:
+        module.fail_json(msg='The currently authenticated user has insufficient permissions to update a webhook in this repository `{repositorySlug}`.'.format(
+            repositorySlug=module.params['repository'],
+        ))
+
+    if info['status'] == 404:
+        module.fail_json(msg='The specified repository `{repositorySlug}` does not exist, or webhook `{webhookName}` does not exist in this repository.'.format(
+            repositorySlug=module.params['repository'],
+            webhookName=webhook["name"]
+        ))
+
+    module.fail_json(msg='Error! Unhandled status `{status}`, bug in Ansible module?'.format(
+        status=info['status']
+    ))
+    return content, True
 
 def main():
     argument_spec = BitbucketHelper.bitbucket_argument_spec()
@@ -176,7 +267,7 @@ def main():
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
-        supports_check_mode=True,    
+        supports_check_mode=True,
         required_together=[('username', 'password')],
         required_one_of=[('username', 'token')],
         mutually_exclusive=[('username', 'token')]
@@ -215,13 +306,25 @@ def main():
 
     # Retrieve existing webhooks information (if any)
     existing_webhooks = bitbucket.get_webhooks_info(fail_when_not_exists=False, filter=None)
-
+    matching_webhooks = [item for item in existing_webhooks if item["name"] == webhook_name]
     # Create new webhook in case it does not exist
-    if (state == 'present') and \
-            (not any(d.get('name', 'non_existing_webhook') == webhook_name for d in existing_webhooks)):
-        if not module.check_mode:
-            result['json'] = create_webhook(module, bitbucket)
-        result['changed'] = True
+    if (state == 'present'):
+        if matching_webhooks:
+            is_changed = False
+            if not module.check_mode:
+                result['json'], is_changed = update_webhook(module, bitbucket, matching_webhooks[0])
+            result['changed'] = is_changed
+        else:
+            if not module.check_mode:
+                result['json'] = create_webhook(module, bitbucket)
+            result['changed'] = True
+    elif (state == 'absent'):
+        if matching_webhooks:
+            if not module.check_mode:
+                result['json'] = delete_webhook(module, bitbucket, matching_webhooks[0])
+            result['changed'] = True
+        else:
+            result['changed'] = False
 
     module.exit_json(**result)
 
