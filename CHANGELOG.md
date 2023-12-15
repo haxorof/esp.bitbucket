@@ -12,6 +12,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 - [bitbucket_hook](plugins/modules/bitbucket_hook.py)
 - [bitbucket_hook_info](plugins/modules/bitbucket_hook_info.py)
 - Added support for deleting webhooks in [bitbucket_webhook](plugins/modules/bitbucket_webhook.py)
+- Added support to fetch repository labels with bitbucket_repo_info.
+- Added support to filter on repository data returned by bitbucket_repo_info.
 
 ### Fixed
 
