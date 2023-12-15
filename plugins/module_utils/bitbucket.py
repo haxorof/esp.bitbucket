@@ -84,7 +84,7 @@ class BitbucketHelper:
             retries=dict(type='int', default=3),
         )
 
-    def request(self, api_url, method, data=None, headers=None):
+    def request(self, api_url, method, data=None, headers=None, add_retries_count=True):
         headers = headers or {}
 
         if self.module.params['token']:
@@ -138,7 +138,8 @@ class BitbucketHelper:
                 except ValueError as e:
                     content['content'] = body
 
-        content['fetch_url_retries'] = retries
+        if add_retries_count:
+            content['fetch_url_retries'] = retries
 
         return info, content
 
@@ -241,6 +242,49 @@ class BitbucketHelper:
 
         if info['status'] != 200:
             self.module.fail_json(msg='Failed to retrieve the projects data.')
+
+        return None
+
+    def get_repository_labels(self, fail_when_not_exists=False, project_key=None, repository=None):
+        """
+        Get labels for an existing repository on Bitbucket
+
+        when fail_when_not_exists=False it just returns None and does not fail
+        """
+        info, content = self.request(
+            api_url=(self.BITBUCKET_API_ENDPOINTS['repos-repositorySlug'] + "/labels").format(
+                url=self.module.params['url'],
+                projectKey=project_key,
+                repositorySlug=repository,
+            ),
+            method='GET',
+            add_retries_count=False,
+        )
+
+        if info['status'] == 200:
+            return content
+
+        if info['status'] == 401:
+            self.module.fail_json(
+                msg='The currently authenticated user has insufficient permissions to see `{repositorySlug}` repository.'.format(
+                    repositorySlug=repository,
+                ))
+
+        if info['status'] == 404:
+            if fail_when_not_exists:
+                self.module.fail_json(msg='`{repositorySlug}` repository does not exist.'.format(
+                    repositorySlug=repository,
+                ))
+            else:
+                return None
+
+        if info['status'] != 200:
+            self.module.fail_json(
+                msg='Failed to retrieve the repository data which matches the supplied projectKey `{projectKey}` and repositorySlug `{repositorySlug}`: {info}'.format(
+                    projectKey=project_key,
+                    repositorySlug=repository,
+                    info=info,
+                ))
 
         return None
 

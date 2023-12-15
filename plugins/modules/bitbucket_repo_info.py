@@ -166,6 +166,20 @@ repositories:
             returned: success
             type: str
             sample: Available
+        labels:
+            description: Bitbucker repository labels (optional)
+            returned: success
+            type: list
+            contains:
+                name:
+                  type: str
+                  sample: mylabel
+        filters:
+            description: To filter on elements in the resulting data
+            returned: success
+            type: list
+            sample:
+                - archived: false
         links:
             description: Links to Bitbucket repository.
             returned: success
@@ -242,6 +256,8 @@ def main():
     argument_spec.update(
         project_key=dict(type='str', required=True, no_log=False, aliases=['project']),
         repository=dict(type='list', elements='str', no_log=False, default=[ '*' ]),
+        filters=dict(type="list", elements='dict', no_log=False, required=False, default=[]),
+        include_labels=dict(type="bool", required=False, default=False),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
@@ -281,8 +297,9 @@ def main():
 
     # Retrieve repositories information if the project exists
     if not result['messages']:
+        resulting_data = []
         if '*' in repositories:
-            result['repositories'] = bitbucket.get_all_repositories_info(fail_when_not_exists=False)
+            resulting_data = bitbucket.get_all_repositories_info(fail_when_not_exists=False)
         else:
             for repository in repositories:
                 # Check if the repository exists. Retrun message if it does not exist.
@@ -292,7 +309,21 @@ def main():
                         repositorySlug=repository
                     ))
                 else:
-                  result['repositories'].append(repo_response)
+                  resulting_data.append(repo_response)
+        for repository in resulting_data:
+            repo_labels_response = bitbucket.get_repository_labels(fail_when_not_exists=False, project_key=module.params['project_key'], repository=repository["slug"])
+            if repo_labels_response:
+              repository.update({"labels": repo_labels_response["values"]})
+            else:
+              repository.update({"labels": []})
+
+        if len(module.params['filters']) > 0:
+          for repository in resulting_data:
+            match_all_filters = all(repository.get(key) == value for filter in module.params['filters'] for key, value in filter.items())
+            if match_all_filters:
+                result['repositories'].append(repository)
+        else:
+          result['repositories'] = resulting_data
 
     module.exit_json(**result)
 
