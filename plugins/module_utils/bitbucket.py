@@ -92,22 +92,17 @@ class BitbucketHelper:
                 'Authorization': 'Bearer {0}'.format(self.module.params['token']),
             })
             self.module.params['force_basic_auth'] = False
-        # else:
-        #    headers.update({
-        #        'Authorization': basic_auth_header(self.module.params['username'], self.module.params['password'])
-        #    })
 
         if isinstance(data, dict):
             data = self.module.jsonify(data)
-            # headers.update({
-            #     'Content-type': 'application/json',
-            # })
             if not ('Content-type' in headers):
                 headers.update({
                     'Content-type': 'application/json',
                 })
 
         retries = 1
+        backoff_time = self.module.params.get('initial_backoff', 5)  # Starting backoff time in seconds
+
         while retries <= self.module.params['retries']:
             response, info = fetch_url(
                 module=self.module,
@@ -118,8 +113,19 @@ class BitbucketHelper:
                 force=True,
                 use_proxy=self.module.params['use_proxy'],
             )
-            if (info is not None) and (info['status'] != -1):
-                break
+
+            if info is not None:
+                status_code = info['status']
+                # Check for HTTP 429 status (rate limiting) or the rate limit header
+                if status_code == 429 or info['headers'].get('X-RateLimit-NearLimit', 'false').lower() == 'true':
+                    time.sleep(backoff_time)  # Back off before retrying
+                    backoff_time *= 2  # Exponential backoff
+                    retries += 1
+                    continue
+
+                if status_code != -1:
+                    break
+
             time.sleep(self.module.params['sleep'])
             retries += 1
 
