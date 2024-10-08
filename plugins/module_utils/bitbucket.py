@@ -101,7 +101,7 @@ class BitbucketHelper:
                 })
 
         retries = 1
-        backoff_time = self.module.params.get('initial_backoff', 5)  # Starting backoff time in seconds
+        backoff_time = self.module.params.get('initial_backoff', 10)  # Starting backoff time in seconds
 
         while retries <= self.module.params['retries']:
             response, info = fetch_url(
@@ -116,14 +116,17 @@ class BitbucketHelper:
 
             if info is not None:
                 status_code = info['status']
-                # Retrieve headers from the response, if available
                 response_headers = {key.lower(): value for key, value in response.headers.items()} if response else {}
-                # Check for HTTP 429 status (rate limiting) or the rate limit header
-                if status_code == 429 or response_headers.get('x-ratelimit-nearlimit', 'false').lower() == 'true':
-                    time.sleep(backoff_time)  # Back off before retrying
-                    backoff_time *= 2  # Exponential backoff
+
+                if status_code == 429:
+                    time.sleep(backoff_time)
+                    backoff_time *= 2
                     retries += 1
                     continue
+
+                if response_headers.get('x-ratelimit-nearlimit', 'false').lower() == 'true':
+                    time.sleep(backoff_time)
+                    backoff_time *= 2
 
                 if status_code != -1:
                     break
